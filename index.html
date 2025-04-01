@@ -1,38 +1,112 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Próximos partidos del Barça</title>
-</head>
-<body>
-  <h1>Próximos partidos del FC Barcelona</h1>
-  <ul id="match-list">Cargando partidos...</ul>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>¿Juega el Barça?</title>
+        <style>
+            body {
+                font-family: system-ui, sans-serif;
+                background: #0b0b0b;
+                color: #ffffff;
+                margin: 0;
+                padding: 2rem;
+                max-width: 600px;
+                margin: auto;
+            }
+            h1 {
+                color: #a50044;
+                text-align: center;
+            }
+            .highlight {
+                background: #a50044;
+                color: white;
+                padding: 1rem;
+                border-radius: 8px;
+                text-align: center;
+                margin-bottom: 1rem;
+            }
+            ul {
+                list-style: none;
+                padding: 0;
+            }
+            li {
+                background: #1e1e1e;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                border-radius: 6px;
+            }
+            .date {
+                display: block;
+                margin-top: 0.5rem;
+                font-size: 0.9rem;
+                color: #aaa;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>¿Juega el Barça?</h1>
+        <div id="highlight" class="highlight">Cargando...</div>
+        <ul id="match-list">
+            Cargando partidos...
+        </ul>
 
-  <script>
-    fetch('/api/matches')
-      .then(res => res.json())
-      .then(data => {
-        const matches = data.matches;
-        const list = document.getElementById('match-list');
-        list.innerHTML = '';
+        <script>
+            fetch("/api/matches")
+                .then((res) => res.json())
+                .then((data) => {
+                    const matches = data.matches;
+                    const list = document.getElementById("match-list");
+                    const highlight = document.getElementById("highlight");
+                    list.innerHTML = "";
 
-        if (!matches || matches.length === 0) {
-          list.innerHTML = '<li>No hay partidos en las próximas dos semanas.</li>';
-          return;
-        }
+                    const today = new Date();
+                    let juegaHoy = false;
 
-        matches.forEach(match => {
-          const li = document.createElement('li');
-          const date = new Date(match.utcDate).toLocaleString('es-ES', { dateStyle: 'full', timeStyle: 'short' });
-          li.textContent = `${match.homeTeam.name} vs ${match.awayTeam.name} – ${date}`;
-          list.appendChild(li);
-        });
-      })
-      .catch(err => {
-        console.error(err);
-        document.getElementById('match-list').textContent = 'Error al cargar los partidos.';
-      });
-  </script>
-</body>
+                    if (!matches || matches.length === 0) {
+                        highlight.textContent =
+                            "No hay partidos en las próximas dos semanas.";
+                        return;
+                    }
+
+                    matches.forEach((match) => {
+                        const matchDate = new Date(match.utcDate);
+                        const li = document.createElement("li");
+                        const formattedDate = matchDate.toLocaleString(
+                            "es-ES",
+                            {
+                                dateStyle: "full",
+                                timeStyle: "short",
+                            },
+                        );
+
+                        const competition =
+                            match.competition?.name ||
+                            "Competición desconocida";
+                        const isHome = match.homeTeam.name === "FC Barcelona";
+                        const rival = isHome
+                            ? match.awayTeam.name
+                            : match.homeTeam.name;
+
+                        li.innerHTML = `<strong>${rival}</strong> (${competition})<span class="date">${formattedDate}</span>`;
+                        list.appendChild(li);
+
+                        if (matchDate.toDateString() === today.toDateString()) {
+                            juegaHoy = true;
+                        }
+                    });
+
+                    highlight.textContent = juegaHoy
+                        ? "✅ ¡Sí! El Barça juega hoy."
+                        : "❌ No, el Barça no juega hoy.";
+                })
+                .catch((err) => {
+                    console.error(err);
+                    document.getElementById("match-list").textContent =
+                        "Error al cargar los partidos.";
+                    document.getElementById("highlight").textContent =
+                        "Error cargando la información.";
+                });
+        </script>
+    </body>
 </html>
