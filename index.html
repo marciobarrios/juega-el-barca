@@ -1,143 +1,133 @@
 <!doctype html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>¿Juega el Barça?</title>
-        <style>
-            * {
-                box-sizing: border-box;
-            }
-            body {
-                font-family: system-ui, sans-serif;
-                background: #2b2d42;
-                color: #ffffff;
-                margin: 0;
-                padding: 1rem;
-                max-width: 800px;
-                margin: auto;
-            }
-            h1 {
-                color: #a50044;
-                text-align: center;
-                font-size: 2rem;
-            }
-            .highlight {
-                background: #a50044;
-                color: white;
-                padding: 1rem;
-                border-radius: 8px;
-                text-align: center;
-                margin: 1rem 0;
-                font-size: 1.2rem;
-            }
-            ul {
-                list-style: none;
-                padding: 0;
-                margin: 0;
-            }
-            li {
-                background: #1e1e1e;
-                padding: 1rem;
-                margin-bottom: 1rem;
-                border-radius: 6px;
-            }
-            li strong {
-                color: rgba(255, 255, 255, 1);
-            }
-            .date {
-                display: block;
-                margin-top: 0.5rem;
-                font-size: 0.9rem;
-                color: rgba(255, 255, 255, 0.5);
-            }
-            .escudo {
-                display: block;
-                width: 80px;
-                margin: 1rem auto 0.5rem;
-            }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>¿Juega el Barça?</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: system-ui, sans-serif;
+        background: #2b2d42;
+        color: #ffffff;
+        margin: 0;
+        padding: 1rem;
+        max-width: 800px;
+        margin: auto;
+      }
+      h1 {
+        color: #a50044;
+        text-align: center;
+        font-size: 2rem;
+      }
+      .highlight {
+        background: #a50044;
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+        margin: 1rem 0;
+        font-size: 1.2rem;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      li {
+        background: #1e1e1e;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 6px;
+      }
+      li strong {
+        color: rgba(255, 255, 255, 1);
+      }
+      .date {
+        display: block;
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .escudo {
+        display: block;
+        width: 80px;
+        margin: 1rem auto 0.5rem;
+      }
 
-            @media (min-width: 600px) {
-                h1 {
-                    font-size: 2.5rem;
-                }
-                .highlight {
-                    font-size: 1.5rem;
-                }
-                .escudo {
-                    width: 100px;
-                }
+      @media (min-width: 600px) {
+        h1 {
+          font-size: 2.5rem;
+        }
+        .highlight {
+          font-size: 1.5rem;
+        }
+        .escudo {
+          width: 100px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <img src="escudo-barca.png" alt="Escudo del FC Barcelona" class="escudo" />
+    <h1>¿Juega el Barça?</h1>
+    <div id="highlight" class="highlight">Cargando...</div>
+    <ul id="match-list">
+      Cargando partidos...
+    </ul>
+
+    <script>
+      fetch("/api/matches")
+        .then((res) => res.json())
+        .then((data) => {
+          const matches = data.matches;
+          const list = document.getElementById("match-list");
+          const highlight = document.getElementById("highlight");
+          list.innerHTML = "";
+
+          const today = new Date();
+          let juegaHoy = false;
+
+          if (!matches || matches.length === 0) {
+            highlight.textContent =
+              "No hay partidos en las próximas dos semanas.";
+            return;
+          }
+
+          matches.forEach((match) => {
+            const matchDate = new Date(match.utcDate);
+            const li = document.createElement("li");
+            const formattedDate = matchDate.toLocaleString("es-ES", {
+              dateStyle: "full",
+              timeStyle: "short",
+            });
+
+            const competition =
+              match.competition?.name || "Competición desconocida";
+            const isHome = match.homeTeam.name === "FC Barcelona";
+            const rival = isHome ? match.awayTeam.name : match.homeTeam.name;
+
+            li.innerHTML = `<strong>${rival}</strong> (${competition})<span class="date">${formattedDate}</span>`;
+            list.appendChild(li);
+
+            if (matchDate.toDateString() === today.toDateString()) {
+              juegaHoy = true;
             }
-        </style>
-    </head>
-    <body>
-        <img
-            src="escudo-barça.png"
-            alt="Escudo del FC Barcelona"
-            class="escudo"
-        />
-        <h1>¿Juega el Barça?</h1>
-        <div id="highlight" class="highlight">Cargando...</div>
-        <ul id="match-list">
-            Cargando partidos...
-        </ul>
+          });
 
-        <script>
-            fetch("/api/matches")
-                .then((res) => res.json())
-                .then((data) => {
-                    const matches = data.matches;
-                    const list = document.getElementById("match-list");
-                    const highlight = document.getElementById("highlight");
-                    list.innerHTML = "";
-
-                    const today = new Date();
-                    let juegaHoy = false;
-
-                    if (!matches || matches.length === 0) {
-                        highlight.textContent =
-                            "No hay partidos en las próximas dos semanas.";
-                        return;
-                    }
-
-                    matches.forEach((match) => {
-                        const matchDate = new Date(match.utcDate);
-                        const li = document.createElement("li");
-                        const formattedDate = matchDate.toLocaleString(
-                            "es-ES",
-                            {
-                                dateStyle: "full",
-                                timeStyle: "short",
-                            },
-                        );
-
-                        const competition =
-                            match.competition?.name ||
-                            "Competición desconocida";
-                        const isHome = match.homeTeam.name === "FC Barcelona";
-                        const rival = isHome
-                            ? match.awayTeam.name
-                            : match.homeTeam.name;
-
-                        li.innerHTML = `<strong>${rival}</strong> (${competition})<span class="date">${formattedDate}</span>`;
-                        list.appendChild(li);
-
-                        if (matchDate.toDateString() === today.toDateString()) {
-                            juegaHoy = true;
-                        }
-                    });
-
-                    highlight.textContent = juegaHoy
-                        ? "✅ ¡Sí! El Barça juega hoy."
-                        : "❌ No, el Barça no juega hoy.";
-                })
-                .catch((err) => {
-                    console.error(err);
-                    document.getElementById("match-list").textContent =
-                        "Error al cargar los partidos.";
-                    document.getElementById("highlight").textContent =
-                        "Error cargando la información.";
-                });
-        </script>
-    </body>
+          highlight.textContent = juegaHoy
+            ? "✅ ¡Sí! El Barça juega hoy."
+            : "❌ No, el Barça no juega hoy.";
+        })
+        .catch((err) => {
+          console.error(err);
+          document.getElementById("match-list").textContent =
+            "Error al cargar los partidos.";
+          document.getElementById("highlight").textContent =
+            "Error cargando la información.";
+        });
+    </script>
+  </body>
 </html>
