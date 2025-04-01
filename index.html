@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Próximos partidos del Barça</title>
+</head>
+<body>
+  <h1>Próximos partidos del FC Barcelona</h1>
+  <ul id="match-list">Cargando partidos...</ul>
+
+  <script>
+    fetch('/api/matches')
+      .then(res => res.json())
+      .then(data => {
+        const matches = data.matches;
+        const list = document.getElementById('match-list');
+        list.innerHTML = '';
+
+        if (!matches || matches.length === 0) {
+          list.innerHTML = '<li>No hay partidos en las próximas dos semanas.</li>';
+          return;
+        }
+
+        matches.forEach(match => {
+          const li = document.createElement('li');
+          const date = new Date(match.utcDate).toLocaleString('es-ES', { dateStyle: 'full', timeStyle: 'short' });
+          li.textContent = `${match.homeTeam.name} vs ${match.awayTeam.name} – ${date}`;
+          list.appendChild(li);
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('match-list').textContent = 'Error al cargar los partidos.';
+      });
+  </script>
+</body>
+</html>
